@@ -8,7 +8,6 @@ PROMPT = (
     "to perform to best answer the query. Output between 5 and 20 terms to query for."
 )
 
-
 class WebSearchItem(BaseModel):
     reason: str
     "Your reasoning for why this search is important to the query."
@@ -21,6 +20,8 @@ class WebSearchPlan(BaseModel):
     searches: list[WebSearchItem]
     """A list of web searches to perform to best answer the query."""
 
+class ChromaSearchPlan(BaseModel):
+    searches : list[]
 
 planner_agent = Agent(
     name="PlannerAgent",
