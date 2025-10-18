@@ -31,3 +31,4 @@ if __name__ == '__main__':
     dl = TxtLoader('arquivos_ong/Meditação Avançada/2019 08 14 Meditação Avancada T2.txt', 0.1)
     dl.load()
     print(dl.chunks[0])
+    print(dl.chunks[1])
