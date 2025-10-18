@@ -1,4 +1,3 @@
-# Threshold de relevância
 from langchain_openai import OpenAI
 from langchain_openai import ChatOpenAI
 from IPython.core.interactiveshell import InteractiveShell
@@ -42,5 +41,13 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
         """
         return prompt, relevant
 
+def gerarAnswer(query, nResult, threshold, vetor_store):
+    result, relevant = gerarPrompt_query(query, nResult, threshold, vetor_store)
+    if relevant:
+        model = ChatOpenAI(model_name="gpt-4o", temperature = 0)
+        answer = model.invoke(result)
+        return answer
+    else:
+        return result
 
  
