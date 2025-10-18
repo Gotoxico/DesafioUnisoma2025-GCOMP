@@ -1,0 +1,13 @@
+Pipeline da Solução — Desafio Unisoma 2025 (Equipe 4)
+
+Cada documento é segmentado em blocos de tamanho fixo (proporcional ao seu comprimento) para reduzir o contexto necessário durante o processamento e otimizar o uso do modelo de linguagem.->
+
+Os blocos são convertidos em embeddings utilizando um modelo da OpenAI e armazenados localmente no Chroma DB.
+O banco é organizado em collection de documentos, permitindo consultas eficientes por similaridade semântica.
+A quantidade de documentos retornados pode ser ajustada conforme a necessidade.->
+
+O usuário realiza uma consulta em linguagem natural. O Chroma DB compara o embedding da query com os vetores armazenados e retorna os blocos mais similares, ou seja, os mais relevantes para a pergunta.->
+
+Com base nos blocos retornados, é criado um prompt que combina o conteúdo mais relevante dos documentos com a consulta do usuário. Esse prompt serve de entrada para o modelo de linguagem.->
+
+O prompt é enviado ao agente da OpenAI, que processa o contexto e a query para gerar uma resposta estruturada, coerente e fundamentada nas informações mais relevantes do conjunto de documentos.
