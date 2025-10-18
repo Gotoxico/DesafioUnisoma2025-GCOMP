@@ -2,6 +2,8 @@ from pypdf import PdfReader
 from docx import Document
 import math
 
+MIN_CHUNK_SIZE = 10
+
 class BaseLoader:
     def __init__(self, filename, chunk_size):
         self.filename = filename
@@ -21,6 +23,7 @@ class BaseLoader:
             chunk_size = max(1, math.ceil(n * self.chunk_size))
         else:
             chunk_size = math.ceil(self.chunk_size)
+        chunk_size = max(MIN_CHUNK_SIZE, chunk_size)
 
         # Gera chunks
         for i in range(0, n, chunk_size):
@@ -72,16 +75,19 @@ class DocxLoader(BaseLoader):
 
 
 if __name__ == '__main__':
-    dl1 = PdfLoader('arquivos_ong/pdfs/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.pdf', 0.1)
+    dl1 = PdfLoader('arquivos_ong/pdfs/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.pdf', 0.01)
     dl1.load()
-    #print(dl1.chunks[0])
+    print(dl1.chunks[0])
+    print()
 
-    dl2 = TxtLoader('arquivos_ong/Meditação Avançada/2019 07 24 Meditação Avançada T2.txt', 0.1)
+    dl2 = TxtLoader('arquivos_ong/Meditação Avançada/2019 07 24 Meditação Avançada T2.txt', 0.01)
     dl2.load()
-    #print(dl2.chunks[0])
+    print(dl2.chunks[0])
+    print()
 
-    dl3 = DocxLoader('arquivos_ong/docx/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.docx', 0.1)
+    dl3 = DocxLoader('arquivos_ong/docx/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.docx', 0.01)
     dl3.load()
+    print()
 
     print(len(dl1))
     print(len(dl2))
