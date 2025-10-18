@@ -2,6 +2,10 @@ import streamlit as st
 import os
 from dotenv import load_dotenv, set_key
 from pathlib import Path
+from PIL import Image
+
+img = Image.open("./imagens/oikon_logo.png")
+
 
 # ===============================
 # 🔐 Verificação e salvamento da chave da API
@@ -23,7 +27,7 @@ if not api_key:
     if st.sidebar.button("Salvar chave"):
         if api_key_input.startswith("sk-"):
             set_key(ENV_PATH, "OPENAI_API_KEY", api_key_input)
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.sidebar.error("❌ Chave inválida. Ela deve começar com 'sk-'.")
     st.stop()  # Impede o restante da interface até salvar a chave
@@ -37,7 +41,7 @@ else:
 
     if st.sidebar.button("Atualizar chave"):
         set_key(ENV_PATH, "OPENAI_API_KEY", new_api_key)
-        st.experimental_rerun()
+        st.rerun()
 
 # ===============================
 # 📂 Gerenciamento de arquivos
@@ -111,5 +115,8 @@ else:
     st.sidebar.info("Nenhum arquivo encontrado.")
 
 # Painel principal
+with st.container(horizontal_alignment="center"):
+    st.image(img)
+
 st.title("💬 Pergunte ao modelo")
 st.chat_input("Digite sua pergunta:")

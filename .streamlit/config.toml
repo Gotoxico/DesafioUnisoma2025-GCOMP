@@ -1,0 +1,12 @@
+[theme]
+base = "light"
+backgroundColor = "#FFFFFF"          # Branco
+secondaryBackgroundColor = "#E6E6FA" # Lavender
+codeBackgroundColor = "#B0E0E6"      # PowderBlue
+primaryColor = "#F15A24"             # Laranja
+secondaryColor = "#3C4193"           # Roxo
+textColor = "#3C4193"                # Roxo
+
+[theme.sidebar]
+backgroundColor = "#F8F8FF"          # GhostWhite
+secondaryBackgroundColor = "#E6E6FA" # Lavender
