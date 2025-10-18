@@ -9,4 +9,5 @@ textColor = "#3C4193"                # Roxo
 
 [theme.sidebar]
 backgroundColor = "#F8F8FF"          # GhostWhite
+primaryColor = "#F15A24"             # Laranja
 secondaryBackgroundColor = "#E6E6FA" # Lavender

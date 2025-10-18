@@ -14,7 +14,10 @@ ENV_PATH = ".env"
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
 
-st.sidebar.title("🔐 Configuração da API")
+st.sidebar.markdown(
+    '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
+    unsafe_allow_html=True
+)
 
 if not api_key:
     st.sidebar.warning("⚠️ Nenhuma chave da API foi encontrada.")
@@ -50,7 +53,10 @@ else:
 FILES_DIR = Path("./arquivos_ong/")
 FILES_DIR.mkdir(exist_ok=True)
 
-st.sidebar.title("📂 Arquivos conhecidos pelo agente")
+st.sidebar.markdown(
+    '<h1 style="color:#F15A24;">📂 Arquivos conhecidos pelo agente</h1>',
+    unsafe_allow_html=True
+)
 
 # Filtro por tipo
 file_type_filter = st.sidebar.selectbox(
@@ -118,5 +124,9 @@ else:
 with st.container(horizontal_alignment="center"):
     st.image(img)
 
-st.title("💬 Pergunte ao modelo")
+st.markdown(
+    '<h1 style="text-align: center;">💬 Pergunte ao modelo</h1>',
+    unsafe_allow_html=True
+)
+
 st.chat_input("Digite sua pergunta:")
