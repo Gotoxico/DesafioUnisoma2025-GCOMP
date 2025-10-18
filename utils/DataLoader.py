@@ -1,3 +1,7 @@
+from pypdf import PdfReader
+from docx import Document
+import math
+
 class BaseLoader:
     def __init__(self, filename, chunk_size):
         self.filename = filename
@@ -7,27 +11,78 @@ class BaseLoader:
     def load(self):
         raise NotImplementedError
 
+    def _create_chunks(self, lines):
+        n = len(lines)
+        if n == 0:
+            return
+
+        # Calcula chunk_size correto
+        if 0 < self.chunk_size < 1:
+            chunk_size = max(1, math.ceil(n * self.chunk_size))
+        else:
+            chunk_size = math.ceil(self.chunk_size)
+
+        # Gera chunks
+        for i in range(0, n, chunk_size):
+            chunk = '\n'.join(lines[i:i + chunk_size])
+            if chunk.strip():  # evita chunk vazio
+                self.chunks.append(chunk)
+
+    def __len__(self):
+        return len(self.chunks)
+
 class TxtLoader(BaseLoader):
     def load(self):
         try:
             with open(self.filename, "r", encoding="utf-8") as file:
-                lines = file.read().split('\n')
-                n = len(lines)
-
-                if 0 < self.chunk_size < 1:
-                    self.chunk_size = len(lines) * self.chunk_size
-
-                self.chunk_size = int(self.chunk_size)
-
-                for i in range(0, n, self.chunk_size):
-                    self.chunks.append('\n'.join(lines[i:i+self.chunk_size]))
-
+                lines = [line for line in file.read().split('\n') if line.strip() != '']
+            self._create_chunks(lines)
         except FileNotFoundError:
             print(f"Erro: O arquivo {self.filename} não foi encontrado.")
         except Exception as e:
             print(f"Um erro ocorreu: {e}")
 
+
+class PdfLoader(BaseLoader):
+    def load(self):
+        try:
+            reader = PdfReader(self.filename)
+            lines = []
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    lines.extend([line for line in text.split('\n') if line.strip() != ''])
+            self._create_chunks(lines)
+        except FileNotFoundError:
+            print(f"Erro: O arquivo {self.filename} não foi encontrado.")
+        except Exception as e:
+            print(f"Um erro ocorreu: {e}")
+
+
+class DocxLoader(BaseLoader):
+    def load(self):
+        try:
+            reader = Document(self.filename)
+            lines = [p.text for p in reader.paragraphs if p.text.strip() != '']
+            self._create_chunks(lines)
+        except FileNotFoundError:
+            print(f"Erro: O arquivo {self.filename} não foi encontrado.")
+        except Exception as e:
+            print(f"Um erro ocorreu: {e}")
+
+
 if __name__ == '__main__':
-    dl = TxtLoader('arquivos_ong/Meditação Avançada/2019 08 14 Meditação Avancada T2.txt', 0.1)
-    dl.load()
-    print(dl.chunks[0])
+    dl1 = PdfLoader('arquivos_ong/pdfs/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.pdf', 0.1)
+    dl1.load()
+    #print(dl1.chunks[0])
+
+    dl2 = TxtLoader('arquivos_ong/Meditação Avançada/2019 07 24 Meditação Avançada T2.txt', 0.1)
+    dl2.load()
+    #print(dl2.chunks[0])
+
+    dl3 = DocxLoader('arquivos_ong/docx/O que é Filosofia afinal_. Qual sua utilidade, se é que há alguma_ _ by Leopoldo Luiz Diniz Lopes _ Disruptuose _ Medium.docx', 0.1)
+    dl3.load()
+
+    print(len(dl1))
+    print(len(dl2))
+    print(len(dl3))
