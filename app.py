@@ -74,6 +74,12 @@ st.sidebar.markdown(
     '<h1 style="color:#F15A24;">📂 Arquivos conhecidos pelo agente</h1>',
     unsafe_allow_html=True
 )
+st.sidebar.markdown(
+    "O modelo só terá acesso aos arquivos listados em 'Arquivos encontrados'. "
+    "Se nenhum arquivo for selecionado, ele vai considerar todos os arquivos dessa lista. "
+    "⚠️ Observe que arquivos que não estiverem nesta lista ou que existam apenas na sua máquina atual "
+    "não estarão disponíveis se o app for executado em outra máquina."
+)
 
 # Filtro por tipo
 file_type_filter = st.sidebar.selectbox(
@@ -136,6 +142,10 @@ selected_files = []
 
 if filtered_files:
     st.sidebar.markdown("### 📁 Arquivos encontrados:")
+    st.sidebar.markdown(
+        "Selecione os arquivos que você quer que o modelo use como contexto. "
+        "Se nenhum arquivo for selecionado, o modelo vai considerar todos os arquivos disponíveis."
+    )
     for f in filtered_files:
         # Cria um checkbox para cada arquivo
         checked = st.sidebar.checkbox(f"{file_icon(f.name)} {f.name}", key=f.name)
@@ -160,12 +170,15 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
-        ans = gerarAnswer(prompt, 5, 0.4, vector_store)
+        ans = gerarAnswer(prompt, 5, 0.4, vector_store, selected_files)
         st.markdown(ans)
     
     # Linha divisória
     st.divider()
     st.markdown("### 📥 Baixar resposta")
+    st.markdown(
+        "Ao fazer o download da resposta a página será recarregada"
+    )
 
     
     # Gerar nomes de arquivo
