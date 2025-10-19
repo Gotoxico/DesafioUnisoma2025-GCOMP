@@ -133,9 +133,11 @@ if filtered_files:
         # Cria um checkbox para cada arquivo
         checked = st.sidebar.checkbox(f"{file_icon(f.name)} {f.name}", key=f.name)
         if checked:
-            selected_files.append(f)
+            selected_files.append(f.name)
 else:
     st.sidebar.info("Nenhum arquivo encontrado.")
+
+print(selected_files)
 
 # Painel principal
 with st.container(horizontal_alignment="center"):
@@ -151,5 +153,5 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
-        ans = gerarAnswer(prompt, 5, 0.4, vector_store)
+        ans = gerarAnswer(prompt, 5, 0.4, vector_store, selected_files)
         st.markdown(ans)
