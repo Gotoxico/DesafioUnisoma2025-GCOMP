@@ -35,8 +35,6 @@ ENV_PATH = (exe_path / ".env").as_posix()
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
 
-vector_store = initChromaDB(DB_DIR, FILES_DIR)
-
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
     unsafe_allow_html=True
@@ -59,6 +57,8 @@ if not api_key:
             st.sidebar.error("❌ Chave inválida. Ela deve começar com 'sk-'.")
     st.stop()
 else:
+    vector_store = initChromaDB(DB_DIR, FILES_DIR)
+
     new_api_key = st.sidebar.text_input(
         "Sua chave da OpenAI:",
         value=api_key,
