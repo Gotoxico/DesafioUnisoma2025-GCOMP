@@ -8,16 +8,12 @@ from utils.FileReaderChromaCreator import initChromaDB
 from utils.agent import gerarAnswer
 
 img = Image.open("./imagens/oikon_logo.png")
-
 # ===============================
 # 🔐 Verificação e salvamento da chave da API
 # ===============================
 ENV_PATH = ".env"
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
-
-vector_stores = initChromaDB()
-
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
@@ -35,21 +31,26 @@ if not api_key:
     if st.sidebar.button("Salvar chave"):
         if api_key_input.startswith("sk-"):
             set_key(ENV_PATH, "OPENAI_API_KEY", api_key_input)
+            os.environ["OPENAI_API_KEY"] = api_key_input  # ✅ define imediatamente
             st.rerun()
         else:
             st.sidebar.error("❌ Chave inválida. Ela deve começar com 'sk-'.")
-    st.stop()  # Impede o restante da interface até salvar a chave
+    st.stop()
 else:
-    # Permitir edição da chave
     new_api_key = st.sidebar.text_input(
         "Sua chave da OpenAI:",
         value=api_key,
-        type="password"  # oculta os caracteres
+        type="password"
     )
 
     if st.sidebar.button("Atualizar chave"):
         set_key(ENV_PATH, "OPENAI_API_KEY", new_api_key)
+        os.environ["OPENAI_API_KEY"] = new_api_key
         st.rerun()
+
+# ✅ SOMENTE AQUI inicializa o ChromaDB
+os.environ["OPENAI_API_KEY"] = api_key
+vector_stores = initChromaDB()
 
 # ===============================
 # 📂 Gerenciamento de arquivos

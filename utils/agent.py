@@ -14,9 +14,12 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
     results = chromaSearchPlan(query , nResults, vector_store)
     
     relevant_docs = []
+    sources = []
     for doc, score in results:
         if score >= threshold:
             relevant_docs.append(doc.page_content)
+            if doc.metadata not in sources:
+                sources.append(doc.metadata)
             
             
     
@@ -32,6 +35,11 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
         Contexto:
         {context_text}
 
+        fontes: 
+        {sources} 
+
+        Se for citar fontes específicas para cada citação, cite realmente a fonte que contenha o texto.
+        Não parafraseie.
         Em vez de mencionar “SPEAKER(nº)”, refira-se aos falantes como “um determinado indivíduo”, “outro indivíduo”, “uma pessoa”, “o participante”, “uma fonte”, “o palestrante”, “o interlocutor”, ou outros termos equivalentes, mantendo o sentido de que se trata de pessoas que falaram durante a palestra.
         Pergunta:
         {query}
@@ -44,7 +52,7 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
 def gerarAnswer(query, nResult, threshold, vetor_store):
     result, relevant = gerarPrompt_query(query, nResult, threshold, vetor_store)
     if relevant:
-        model = ChatOpenAI(model_name="gpt-4o", temperature = 0)
+        model = ChatOpenAI(model_name="gpt-5", temperature = 0)
         answer = model.invoke(result)
         return answer.content
     else:
