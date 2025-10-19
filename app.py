@@ -16,9 +16,6 @@ ENV_PATH = ".env"
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
 
-vector_stores = initChromaDB()
-
-
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
     unsafe_allow_html=True
@@ -50,6 +47,8 @@ else:
     if st.sidebar.button("Atualizar chave"):
         set_key(ENV_PATH, "OPENAI_API_KEY", new_api_key)
         st.rerun()
+
+vector_stores = initChromaDB()
 
 # ===============================
 # 📂 Gerenciamento de arquivos

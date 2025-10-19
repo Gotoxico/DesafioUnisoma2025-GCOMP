@@ -49,6 +49,11 @@ def carregarArquivosFolder(folderPath, chunkSize, vector_store, skipIfUnchanged)
             continue
 
         file_path = os.path.abspath(os.path.join(folderPath, file))
+        base_filename = os.path.basename(file_path)  
+        try:
+            rel_path = os.path.relpath(file_path)
+        except Exception:
+            rel_path = file_path
 
         if file.endswith(".txt"):
             loader = TxtLoader(file_path, chunkSize)
@@ -59,20 +64,29 @@ def carregarArquivosFolder(folderPath, chunkSize, vector_store, skipIfUnchanged)
 
         loader.load()
         n_chunks = len(loader.chunks)
-        print(f"{file_path} → {n_chunks} chunks")
+        print(f"{rel_path} → {n_chunks} chunks")
 
         docs_to_upsert = []
         ids_to_upsert = []
 
         for i, chunk in enumerate(loader.chunks):
-            chunk_id = makeChunkID(file_path, i)
+            chunk_id = makeChunkID(base_filename, i)
             ch_hash = contentHash(chunk)
-            metadata = {"source": f"{file_path}_{i}", "content_hash": ch_hash}
+
+            metadata = {
+                "source": f"{base_filename}_{i}",
+                "file_basename": base_filename,
+                "original_path": file_path,
+                "content_hash": ch_hash
+            }
 
             should_upsert = True
             if skipIfUnchanged and collection is not None:
                 try:
-                    existing = collection.get(ids=[chunk_id], include=['metadatas', 'documents', 'ids'])
+                    existing = collection.get(
+                        ids=[chunk_id],
+                        include=['metadatas', 'documents', 'ids']
+                    )
                     if existing and len(existing.get("ids", [])) > 0:
                         existing_meta = existing.get("metadatas", [{}])[0] or {}
                         existing_hash = existing_meta.get("content_hash")
@@ -88,9 +102,10 @@ def carregarArquivosFolder(folderPath, chunkSize, vector_store, skipIfUnchanged)
 
         if docs_to_upsert:
             vector_store.add_documents(documents=docs_to_upsert, ids=ids_to_upsert)
-            print(f"Upserted {len(docs_to_upsert)} chunks for file {file_path}")
+            print(f"Upserted {len(docs_to_upsert)} chunks for file {rel_path}")
         else:
-            print(f"No changes detected for file {file_path}; nothing upserted.")
+            print(f"No changes detected for file {rel_path}; nothing upserted.")
+
     return True
 
 
@@ -100,7 +115,7 @@ def carregarArquivo(file, chunkSize, vector_store, skipIfUnchanged):
     collection = getCollectionFromVectorStore(vector_store)
 
     if file.endswith(".txt"):
-            loader = TxtLoader(file, chunkSize)
+        loader = TxtLoader(file, chunkSize)
     elif file.endswith(".pdf"):
         loader = PdfLoader(file, chunkSize)
     else:
@@ -113,16 +128,25 @@ def carregarArquivo(file, chunkSize, vector_store, skipIfUnchanged):
     docs_to_upsert = []
     ids_to_upsert = []
 
+    base_filename = os.path.basename(file)  
+
     for i, chunk in enumerate(loader.chunks):
         chunk_id = makeChunkID(file, i)
         ch_hash = contentHash(chunk)
 
-        metadata = {"source": f"{file}_{i}", "content_hash": ch_hash}
+        metadata = {
+            "source": f"{base_filename}_{i}",  
+            "file_basename": base_filename,     
+            "content_hash": ch_hash
+        }
 
         should_upsert = True
         if skipIfUnchanged and collection is not None:
             try:
-                existing = collection.get(ids=[chunk_id], include=['metadatas', 'documents', 'ids'])
+                existing = collection.get(
+                    ids=[chunk_id],
+                    include=['metadatas', 'documents', 'ids']
+                )
                 if existing and len(existing.get("ids", [])) > 0:
                     existing_meta = existing.get("metadatas", [{}])[0] or {}
                     existing_hash = existing_meta.get("content_hash")
