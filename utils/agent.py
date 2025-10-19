@@ -52,7 +52,7 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
 def gerarAnswer(query, nResult, threshold, vetor_store):
     result, relevant = gerarPrompt_query(query, nResult, threshold, vetor_store)
     if relevant:
-        model = ChatOpenAI(model_name="gpt-5", temperature = 0)
+        model = ChatOpenAI(model_name="gpt-4o", temperature = 0)
         answer = model.invoke(result)
         return answer.content
     else:

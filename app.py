@@ -7,6 +7,13 @@ from utils.FileReaderChromaCreator import initChromaDB
 from utils.FileReaderChromaCreator import process_new_uploaded
 from utils.agent import gerarAnswer
 import sys
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from datetime import datetime
+from textwrap import wrap
+
+
 
 def get_base_dir() -> Path:
     """Retorna o diretório onde estão os arquivos do app."""
@@ -153,3 +160,68 @@ if prompt:
     with st.chat_message("assistant"):
         ans = gerarAnswer(prompt, 5, 0.4, vector_store)
         st.markdown(ans)
+    
+    # Linha divisória
+    st.divider()
+    st.markdown("### 📥 Baixar resposta")
+
+    
+    # Gerar nomes de arquivo
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    txt_filename = f"resposta_modelo_{timestamp}.txt"
+    pdf_filename = f"resposta_modelo_{timestamp}.pdf"
+
+    # --- Arquivo TXT ---
+    txt_buffer = io.BytesIO()
+    txt_buffer.write(ans.encode("utf-8"))
+    txt_buffer.seek(0)
+
+    # --- Arquivo PDF com quebra automática ---
+    pdf_buffer = io.BytesIO()
+    pdf = canvas.Canvas(pdf_buffer, pagesize=A4)
+    width, height = A4
+
+    # Configurações de layout
+    left_margin = 50
+    top_margin = height - 50
+    line_height = 14
+    max_width = 90  # número médio de caracteres por linha (ajuste fino se quiser)
+
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(left_margin, top_margin, "Resposta do modelo")
+    pdf.line(left_margin, top_margin - 5, width - left_margin, top_margin - 5)
+
+    pdf.setFont("Helvetica", 12)
+    y = top_margin - 30
+
+    for paragraph in ans.split("\n"):
+        # Faz quebra automática de linha para cada parágrafo
+        wrapped_lines = wrap(paragraph, width=max_width)
+        for line in wrapped_lines:
+            if y < 50:  # margem inferior -> cria nova página
+                pdf.showPage()
+                pdf.setFont("Helvetica", 12)
+                y = top_margin
+            pdf.drawString(left_margin, y, line)
+            y -= line_height
+        y -= 10  # espaço entre parágrafos
+
+    pdf.save()
+    pdf_buffer.seek(0)
+
+    # --- Botões de download ---
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            label="⬇️ Baixar como TXT",
+            data=txt_buffer,
+            file_name=txt_filename,
+            mime="text/plain"
+        )
+    with col2:
+        st.download_button(
+            label="⬇️ Baixar como PDF",
+            data=pdf_buffer,
+            file_name=pdf_filename,
+            mime="application/pdf"
+        )
