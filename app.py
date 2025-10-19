@@ -3,21 +3,32 @@ import os
 from dotenv import load_dotenv, set_key
 from pathlib import Path
 from PIL import Image
-from utils.FileReaderChromaCreator import carregarArquivo
 from utils.FileReaderChromaCreator import initChromaDB
+from utils.FileReaderChromaCreator import process_new_uploaded
 from utils.agent import gerarAnswer
+import sys
 
-img = Image.open("./imagens/oikon_logo.png")
+def get_base_dir() -> Path:
+    """Retorna o diretório onde estão os arquivos do app."""
+    if getattr(sys, 'frozen', False):  # Rodando como executável (PyInstaller)
+        return Path(sys.executable).parent
+    else:  # Rodando via Python normal
+        return Path(__file__).parent
 
-# ===============================
-# 🔐 Verificação e salvamento da chave da API
-# ===============================
-ENV_PATH = ".env"
+exe_path = get_base_dir()
+
+FILES_DIR = exe_path / "arquivos_ong"
+FILES_DIR.mkdir(exist_ok=True)
+
+DB_DIR = exe_path / "chroma_langchain_db"
+
+img = Image.open((exe_path / "imagens" / "oikon_logo.png").as_posix())
+
+ENV_PATH = (exe_path / ".env").as_posix()
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
 
-vector_stores = initChromaDB()
-
+vector_store = initChromaDB(DB_DIR, FILES_DIR)
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
@@ -35,28 +46,22 @@ if not api_key:
     if st.sidebar.button("Salvar chave"):
         if api_key_input.startswith("sk-"):
             set_key(ENV_PATH, "OPENAI_API_KEY", api_key_input)
+            load_dotenv(ENV_PATH, override=True)
             st.rerun()
         else:
             st.sidebar.error("❌ Chave inválida. Ela deve começar com 'sk-'.")
-    st.stop()  # Impede o restante da interface até salvar a chave
+    st.stop()
 else:
-    # Permitir edição da chave
     new_api_key = st.sidebar.text_input(
         "Sua chave da OpenAI:",
         value=api_key,
-        type="password"  # oculta os caracteres
+        type="password"
     )
 
     if st.sidebar.button("Atualizar chave"):
         set_key(ENV_PATH, "OPENAI_API_KEY", new_api_key)
+        load_dotenv(ENV_PATH, override=True)
         st.rerun()
-
-# ===============================
-# 📂 Gerenciamento de arquivos
-# ===============================
-
-FILES_DIR = Path("./arquivos_ong/")
-FILES_DIR.mkdir(exist_ok=True)
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">📂 Arquivos conhecidos pelo agente</h1>',
@@ -82,7 +87,7 @@ supported_exts = {
 
 # 🔍 Buscar arquivos de forma recursiva
 all_files = [
-    f for f in sorted(FILES_DIR.rglob("*"))
+    f for f in sorted((FILES_DIR / "processed").rglob("*"))
     if f.is_file() and f.suffix.lower() in supported_exts[file_type_filter]
 ]
 
@@ -109,30 +114,26 @@ uploaded_files = st.sidebar.file_uploader(
     accept_multiple_files=True
 )
 
-if "upload_done" not in st.session_state:
-    st.session_state.upload_done = False
-
-if uploaded_files and not st.session_state.upload_done:
+if uploaded_files:
+    print(uploaded_files)
     for file in uploaded_files:
-        file_path = FILES_DIR / file.name
+        file_path = FILES_DIR / "uploaded" / file.name
         with open(file_path, "wb") as f:
             f.write(file.getbuffer())
-        carregarArquivo(str(file_path.as_posix()), 0.01, vector_stores, True)
 
     st.sidebar.success("✅ Upload concluído com sucesso!")
-    st.session_state.upload_done = True
-    st.rerun()
 
-# Após o rerun, limpar o estado para permitir novo upload
-if st.session_state.upload_done:
-    st.session_state.upload_done = False
+    process_new_uploaded(FILES_DIR, vector_store)
 
-# Exibir os arquivos filtrados na sidebar
+selected_files = []
+
 if filtered_files:
     st.sidebar.markdown("### 📁 Arquivos encontrados:")
     for f in filtered_files:
-        relative_path = f.relative_to(FILES_DIR)
-        st.sidebar.markdown(f"- {file_icon(f.name)} **{relative_path}**")
+        # Cria um checkbox para cada arquivo
+        checked = st.sidebar.checkbox(f"{file_icon(f.name)} {f.name}", key=f.name)
+        if checked:
+            selected_files.append(f)
 else:
     st.sidebar.info("Nenhum arquivo encontrado.")
 
@@ -150,5 +151,5 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
-        ans = gerarAnswer(prompt, 5, 0.4, vector_stores)
+        ans = gerarAnswer(prompt, 5, 0.4, vector_store)
         st.markdown(ans)

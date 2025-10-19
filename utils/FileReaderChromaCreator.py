@@ -8,16 +8,69 @@ from utils.DataLoader import TxtLoader, PdfLoader, DocxLoader
 import hashlib
 
 import unicodedata
+import shutil
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from pathlib import Path
 
-def initChromaDB():
+def process_new_uploaded(base_dir: Path, vector_store: Chroma):
+    uploaded_dir = base_dir / "uploaded"
+    processed_dir = base_dir / "processed"
+
+    uploaded_dir.mkdir(parents=True, exist_ok=True)
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
+    # Process subfolders first
+    subfolders = [f for f in uploaded_dir.iterdir() if f.is_dir()]
+    for folder in subfolders:
+        print(f"Processando pasta: {folder.name}")
+        try:
+            carregarArquivosFolder(folder, 0.01, vector_store, True)
+            destination = processed_dir / folder.name
+            shutil.move(str(folder), str(destination))
+            print(f"Pasta {folder.name} movida para 'processed'.")
+        except Exception as e:
+            print(f"Erro ao processar pasta {folder.name}: {e}")
+
+    # Process files directly in uploaded/
+    files = [f for f in uploaded_dir.iterdir() if f.is_file() and f.suffix.lower() in [".pdf", ".docx", ".txt"]]
+    for file in files:
+        print(f"Processando arquivo: {file.name}")
+        try:
+            carregarArquivo(str(file), 0.01, vector_store, True)
+            destination = processed_dir / file.name
+            shutil.move(str(file), str(destination))
+            print(f"Arquivo {file.name} movido para 'processed'.")
+        except Exception as e:
+            print(f"Erro ao processar arquivo {file.name}: {e}")
+
+    print("💾 Banco de dados atualizado e sincronizado")
+
+def initChromaDB(persist_directory: Path, files_dir: Path) -> Chroma:
+    # Cria embeddings
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-    vector_store = Chroma(
-        collection_name="example_collection",
-        embedding_function=embeddings,
-        persist_directory="./chroma_langchain_db",
-    )
+
+    # Se o diretório não existir → primeira inicialização
+    if not persist_directory.exists():
+        print("Nenhum banco encontrado. Criando ChromaDB.")
+        persist_directory.mkdir(parents=True, exist_ok=True)
+
+        vector_store = Chroma(
+            collection_name="example_collection",
+            embedding_function=embeddings,
+            persist_directory=str(persist_directory),
+        )
+
+        print("ChromaDB criado.")
+    else:
+        print("Banco ChromaDB existente encontrado. Reutilizando instância...")
+        vector_store = Chroma(
+            collection_name="example_collection",
+            embedding_function=embeddings,
+            persist_directory=str(persist_directory),
+        )
+
+    process_new_uploaded(files_dir, vector_store)
 
     return vector_store
 
