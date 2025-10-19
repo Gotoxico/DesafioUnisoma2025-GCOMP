@@ -140,9 +140,11 @@ if filtered_files:
         # Cria um checkbox para cada arquivo
         checked = st.sidebar.checkbox(f"{file_icon(f.name)} {f.name}", key=f.name)
         if checked:
-            selected_files.append(f)
+            selected_files.append(f.name)
 else:
     st.sidebar.info("Nenhum arquivo encontrado.")
+
+print(selected_files)
 
 # Painel principal
 with st.container(horizontal_alignment="center"):

@@ -9,9 +9,11 @@ def print_full(text, chunk_size=1000):
     for i in range(0, len(text), chunk_size):
         print(text[i:i+chunk_size])
 
-def gerarPrompt_query(query, nResults, threshold, vector_store):
+def gerarPrompt_query(query, nResults, threshold, vector_store, selected_files):
+    print(selected_files)
     relevant = True
-    results = chromaSearchPlan(query , nResults, vector_store)
+    results = chromaSearchPlan(query , nResults, vector_store, selected_files)
+    print(results)
     
     relevant_docs = []
     sources = []
@@ -49,8 +51,8 @@ def gerarPrompt_query(query, nResults, threshold, vector_store):
         """
         return prompt, relevant
 
-def gerarAnswer(query, nResult, threshold, vetor_store):
-    result, relevant = gerarPrompt_query(query, nResult, threshold, vetor_store)
+def gerarAnswer(query, nResult, threshold, vetor_store, selected_files):
+    result, relevant = gerarPrompt_query(query, nResult, threshold, vetor_store, selected_files)
     if relevant:
         model = ChatOpenAI(model_name="gpt-4o", temperature = 0)
         answer = model.invoke(result)
