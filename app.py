@@ -28,8 +28,7 @@ ENV_PATH = (exe_path / ".env").as_posix()
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
 
-vector_stores = initChromaDB()
-
+vector_store = initChromaDB(DB_DIR, FILES_DIR)
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
@@ -63,13 +62,6 @@ else:
         set_key(ENV_PATH, "OPENAI_API_KEY", new_api_key)
         load_dotenv(ENV_PATH, override=True)
         st.rerun()
-
-# ===============================
-# 📂 Gerenciamento de arquivos
-# ===============================
-
-FILES_DIR = Path("./arquivos_ong/")
-FILES_DIR.mkdir(exist_ok=True)
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">📂 Arquivos conhecidos pelo agente</h1>',
