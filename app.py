@@ -3,9 +3,11 @@ import os
 from dotenv import load_dotenv, set_key
 from pathlib import Path
 from PIL import Image
+from utils.FileReaderChromaCreator import carregarArquivo
+from utils.FileReaderChromaCreator import initChromaDB
+from utils.agent import gerarAnswer
 
 img = Image.open("./imagens/oikon_logo.png")
-
 
 # ===============================
 # 🔐 Verificação e salvamento da chave da API
@@ -13,6 +15,9 @@ img = Image.open("./imagens/oikon_logo.png")
 ENV_PATH = ".env"
 load_dotenv(ENV_PATH)
 api_key = os.getenv("OPENAI_API_KEY")
+
+vector_stores = initChromaDB()
+
 
 st.sidebar.markdown(
     '<h1 style="color:#F15A24;">🔐 Configuração da API</h1>',
@@ -104,12 +109,23 @@ uploaded_files = st.sidebar.file_uploader(
     accept_multiple_files=True
 )
 
-if uploaded_files:
+if "upload_done" not in st.session_state:
+    st.session_state.upload_done = False
+
+if uploaded_files and not st.session_state.upload_done:
     for file in uploaded_files:
         file_path = FILES_DIR / file.name
         with open(file_path, "wb") as f:
             f.write(file.getbuffer())
+        carregarArquivo(str(file_path.as_posix()), 0.01, vector_stores, True)
+
     st.sidebar.success("✅ Upload concluído com sucesso!")
+    st.session_state.upload_done = True
+    st.rerun()
+
+# Após o rerun, limpar o estado para permitir novo upload
+if st.session_state.upload_done:
+    st.session_state.upload_done = False
 
 # Exibir os arquivos filtrados na sidebar
 if filtered_files:
@@ -129,4 +145,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.chat_input("Digite sua pergunta:")
+prompt = st.chat_input("Digite sua pergunta:")
+if prompt:
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    with st.chat_message("assistant"):
+        ans = gerarAnswer(prompt, 5, 0.4, vector_stores)
+        st.markdown(ans)

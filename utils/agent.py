@@ -46,7 +46,7 @@ def gerarAnswer(query, nResult, threshold, vetor_store):
     if relevant:
         model = ChatOpenAI(model_name="gpt-4o", temperature = 0)
         answer = model.invoke(result)
-        return answer
+        return answer.content
     else:
         return result
 

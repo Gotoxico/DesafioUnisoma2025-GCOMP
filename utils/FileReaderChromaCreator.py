@@ -8,7 +8,18 @@ from utils.DataLoader import TxtLoader, PdfLoader, DocxLoader
 import hashlib
 
 import unicodedata
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
 
+def initChromaDB():
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    vector_store = Chroma(
+        collection_name="example_collection",
+        embedding_function=embeddings,
+        persist_directory="./chroma_langchain_db",
+    )
+
+    return vector_store
 
 def makeChunkID(file : str, index : int) -> str:
     name = f"{os.path.abspath(file)}_{index}"
